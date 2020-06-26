@@ -1,4 +1,6 @@
 import {db} from '../lib/db'
+import {client, arqlWithRetry, getTxWithRetry} from '../lib/arweave'
+
 const AppVersion = process.env.APP_VERSION || null //used in ARQL query if not null
 
 //The main idea: we have a db table that we use to store the bids
@@ -6,13 +8,23 @@ const AppVersion = process.env.APP_VERSION || null //used in ARQL query if not n
 //we can then tweet each bid only once, and not repeat ourselves
 //this also gives us a local store of all bids for other apps to query
 
-//call this every 15 mins or so to check for new bids
-const updateBidQueue = async() => {
-    //use arql to get all open bid txids
-    //query the db for txids we already have, and remove those from the result set
-    //get bid details for each new txid
+//adds new bids to the db
+//assumes that the bids have been retrieved from arweave and filtered against existing bids in the db
+const updateBidQueue = async(bids) => {
     //write them to the db, table "queue" with status "queued"
-    //return # of new bids added
+    //TODO
+    console.log(JSON.stringify(bids, null, 2));
+    for (var bid of bids) {
+        await db.query(`insert into openbid.open_bids
+                  (bidder_user_id, bid_txid, bidder_contact_url, status, bid_type, 
+                   bid_token_id, bid_amount, bid_currency, bid_quantity, bid_token_name)
+                  values
+                  (
+                      'TODO', '${bid.id}', 'TODO', 'queued', '${bid.tags.Type == '0' ? "buy":"sell"}',
+                      '${bid.tags.Token}', '${bid.tags.Price}', '${bid.tags.Currency}', '${bid.tags.Amount}', '${bid.tags.Token.substr(0, 5)} [TODO]'
+                  )`)
+    }
+    return true
 }
 
 //call no more than once a minute if you're not buffering...
@@ -22,7 +34,7 @@ const getNextBidFromQueue = async() => {
     //last in first out: get the oldest queued bid
     var result = await db.query(`
     select * from openbid.open_bids 
-    where status='pending'
+    where status='queued'
     order by id asc limit 1`)
 
     if (result.rows.length == 0)

@@ -8,44 +8,6 @@ const fs= require('fs')
 const client = Arweave.init({host: 'arweave.net', port: 443, protocol: 'https' });
 client.api.config.timeout = 1000 * 60 * 1.5;
 
-const getTagsWithRetry= async(id, numRetries = 10) => {
-    var tags = []
-
-
-    await retry(async() => {
-
-        var ax = axios.create()
-        const response = await ax.get(`https://arweave.net/tx/${id}/tags`, {timeout: client.api.config.timeout }); 
-        if (response.status === 200) {
-            console.log(JSON.stringify(response.data))
-            tags = response.data;
-        } else {
-            throw new Error("HTTP error "+response.status+" on get tx tags from Arweave Gateway")
-        }
-    },{retries: numRetries})
-
-    return tags
-}
-
-const getDataWithRetry= async(id, numRetries = 10) => {
-    var data = []
-
-
-    await retry(async() => {
-
-        var ax = axios.create()
-        const response = await ax.get(`https://arweave.net/tx/${id}/data`, {timeout: client.api.config.timeout }); 
-        if (response.status === 200) {
-            console.log(JSON.stringify(response.data))
-            data = response.data;
-        } else {
-            throw new Error("HTTP error "+response.status+" on get tx tags from Arweave Gateway")
-        }
-    },{retries: numRetries})
-
-    return data
-}
-
 
 const arqlWithRetry=async(query, numRetries = 10) =>{
     var txids = []
@@ -60,12 +22,32 @@ const arqlWithRetry=async(query, numRetries = 10) =>{
     return txids
 }
 
-const getTxWithRetry=async(txid, part="all", numRetries = 10) => {
+const getTxWithRetry=async(txid, part="all", decode = true, numRetries = 10) => {
     
     var tx = null
     await retry(async() => {
         tx = await client.transactions.get(txid)
     }, {retries: numRetries})
+
+    if (!decode)
+        return tx 
+
+    else {
+        var decoded = 
+        {
+            id: tx.id,
+            data: part == 'all' ? JSON.parse(tx.get('data', {decode: true, string: true})) : null,
+            tags: {}
+        }
+        tx.get('tags').forEach(tag => {
+            let key = tag.get('name', {decode: true, string: true});
+            let value = tag.get('value', {decode: true, string: true});
+            console.log(`${key} : ${value}`);
+            decoded.tags[key]=value
+        });
+
+        return decoded
+    }
 
     return tx
 }

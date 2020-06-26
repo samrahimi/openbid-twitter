@@ -2,14 +2,38 @@ const creds = require(process.env.TWITTER_CREDENTIALS || './creds.json')
 const BOT_ACCOUNT_NAME = process.env.TWEETY_BOT || 'ArweaveAPI' 
 const Twitter = require("twitter")
 const client = new Twitter(creds)
+
+import {arqlWithRetry, getTxWithRetry} from './lib/arweave'
+import {and, equals} from 'arql-ops'; 
+
 import {getNextBidFromQueue, updateBidQueue, markAsTweeted} from './model/bids'
+import { db } from './lib/db'
 
 
 
-  const syncFromArweave = () => {
-    updateBidQueue().then((count) => {
-      console.log(`arweave sync complete. ${count} bids added to queue`)
-    })
+  const syncFromArweave = async() => {
+    var query = and(
+      equals('App-Name', 'OpenBid'),
+    )
+    var bidTxids = await arqlWithRetry(query)
+    console.log('total bids: '+ bidTxids.length)
+    if (bidTxids.length == 0)
+      return 0
+
+    //filter out any txids already in our database
+    var result = await db.query(`select * from openbid.open_bids`)
+    if (result.rows.length > 0 ) {
+      bidTxids = bidTxids.filter(txid => !(result.rows.map(row => row.bid_txid).includes(txid)))
+    }
+
+    console.log('new bids: '+ bidTxids.length)
+
+    //get the tx data
+    var bids = await Promise.all(bidTxids.map(txid => getTxWithRetry(txid, 'tags')))
+    console.log('got bids from arweave')
+    await updateBidQueue(bids)
+    console.log(`arweave sync complete. ${bids.length} bids added to queue`)
+    return bids.length
   }
 
   const tweetNextBid = () => {
@@ -31,8 +55,11 @@ import {getNextBidFromQueue, updateBidQueue, markAsTweeted} from './model/bids'
     })
   }
 
+  syncFromArweave().then((count) => {
+    console.log('initial sync complete. queue will be processed at 1 bid per minute')
+    console.log('setting timers')
 
-  setInterval(syncFromArweave, 15 * 60 * 1000)
-  setInterval(tweetNextBid, 1 * 60 * 1000)
-
+    setInterval(syncFromArweave, 15 * 60 * 1000)
+    setInterval(tweetNextBid, 1 * 60 * 1000)
+  })
   //that's all folks.
