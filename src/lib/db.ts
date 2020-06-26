@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-const DB_NAME = 'openbid_twitter'
+const DB_NAME = 'scraper'
 
 /*
 if (typeof process.env.DATABASE_URL !== 'string') {
