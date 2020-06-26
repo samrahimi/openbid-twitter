@@ -1,6 +1,6 @@
 # Credentials and wallets
 #if using a public GH repo exclude these files!
-#creds.json
+creds.json
 #key_file.json
 
 # Logs
