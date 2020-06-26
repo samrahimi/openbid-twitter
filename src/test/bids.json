@@ -1,0 +1,11 @@
+[
+    
+    {"name": "App-Name", "value": "OpenBid"},
+    {"name": "App-Version", "value": "0.0.1"},
+    {"name": "Token", "value": "OpenBid"},
+    {"name": "Amount", "value": "OpenBid"},
+    {"name": "Price", "value": "OpenBid"},
+    {"name": "Type", "value": "OpenBid"},
+    {"name": "Source", "value": "OpenBid"},
+    {"name": "Account", "value": "OpenBid"}
+]

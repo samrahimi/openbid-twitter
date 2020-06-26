@@ -1,0 +1,27 @@
+{
+  "name": "openbid-twitter-bot",
+  "version": "0.0.1",
+  "description": "Twitter interface to token contracts running on smartweave",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Sam Rahimi",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^3.8.3"
+  },
+  "dependencies": {
+    "@types/node": "^13.13.4",
+    "arweave": "github:ArweaveTeam/arweave-js#fastwrite-signature",
+    "async-retry": "^1.3.1",
+    "axios": "^0.19.2",
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "node-twitter-api": "^1.8.0",
+    "pg": "^8.0.3",
+    "ts-node": "^8.10.2",
+    "twitter": "^1.7.1"
+  }
+}

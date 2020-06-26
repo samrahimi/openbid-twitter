@@ -1,0 +1,1 @@
+Place an open bid to buy or sell stake in any smartweave PST token.
