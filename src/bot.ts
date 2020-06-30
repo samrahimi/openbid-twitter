@@ -14,6 +14,7 @@ import { db } from './lib/db'
   const syncFromArweave = async() => {
     var query = and(
       equals('App-Name', 'OpenBid'),
+      equals('App-Version', '0.0.1')
     )
     var bidTxids = await arqlWithRetry(query)
     console.log('total bids: '+ bidTxids.length)
@@ -42,7 +43,7 @@ import { db } from './lib/db'
         console.log("Nothing in queue")
       else {
         console.log("Tweeting bid txid "+bid.txid)
-        client.post('statuses/update', {status: `${bid.bidder_id} wants to ${bid.bid_type} ${bid.bid_token_quantity} ${bid.token_name} for ${bid.bid_amount} ${bid.bid_currency}. Interested? Contact bidder. Learn more @ https://openbid.perma.website)`})
+        client.post('statuses/update', {status: `Offer to ${bid.bid_type} ${bid.bid_token_quantity} ${bid.token_name} for ${bid.bid_amount} ${bid.bid_currency}. ${bid.contact_url}`})
         .then (function (tweet) {
           console.log(tweet);
           markAsTweeted(bid.id, tweet.id_str)

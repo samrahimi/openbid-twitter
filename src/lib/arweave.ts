@@ -36,6 +36,7 @@ const getTxWithRetry=async(txid, part="all", decode = true, numRetries = 10) => 
         var decoded = 
         {
             id: tx.id,
+            owner: tx.owner, 
             data: part == 'all' ? JSON.parse(tx.get('data', {decode: true, string: true})) : null,
             tags: {}
         }

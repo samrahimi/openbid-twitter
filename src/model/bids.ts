@@ -8,20 +8,26 @@ const AppVersion = process.env.APP_VERSION || null //used in ARQL query if not n
 //we can then tweet each bid only once, and not repeat ourselves
 //this also gives us a local store of all bids for other apps to query
 
+const getContactUrlFromBidderId= (bidderId, bidderSource='arweave') => {
+    if (bidderSource == 'arweave')
+        return 'https://wqpddejmpwo6.arweave.net/RlUqMBb4NrvosxXV6e9kQkr2i4X0mqIAK49J_C3yrKg/index.html#/inbox/to='+bidderId
+}
 //adds new bids to the db
 //assumes that the bids have been retrieved from arweave and filtered against existing bids in the db
 const updateBidQueue = async(bids) => {
     //write them to the db, table "queue" with status "queued"
     //TODO
     console.log(JSON.stringify(bids, null, 2));
+
+    
     for (var bid of bids) {
         await db.query(`insert into openbid.open_bids
                   (bidder_user_id, bid_txid, bidder_contact_url, status, bid_type, 
                    bid_token_id, bid_amount, bid_currency, bid_quantity, bid_token_name)
                   values
                   (
-                      'TODO', '${bid.id}', 'TODO', 'queued', '${bid.tags.Type == '0' ? "buy":"sell"}',
-                      '${bid.tags.Token}', '${bid.tags.Price}', '${bid.tags.Currency}', '${bid.tags.Amount}', '${bid.tags.Token.substr(0, 5)} [TODO]'
+                      '${bid.owner}', '${bid.id}', '${getContactUrlFromBidderId(bid.owner)}', 'queued', '${bid.tags.Type == '0' ? "buy":"sell"}',
+                      '${bid.tags.Token}', '${bid.tags.Price}', '${bid.tags.Currency}', '${bid.tags.Amount}', '${bid.tags.Token.substr(0, 10)}...'
                   )`)
     }
     return true
@@ -55,7 +61,8 @@ const getNextBidFromQueue = async() => {
             bid_currency: bid.bid_currency,
             bid_token_quantity: bid.bid_quantity,
             token_id: bid.bid_token_id,
-            token_name: bid.bid_token_name
+            token_name: bid.bid_token_name,
+            contact_url: bid.bidder_contact_url
     }
     return obj
 }
