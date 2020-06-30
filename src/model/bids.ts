@@ -89,4 +89,15 @@ const markAsTweeted = async(bid_id, tweet_id) => {
 
 }
 
-export {markAsTweeted, getNextBidFromQueue, updateBidQueue, updateBidStatus}
+const createBid = async(bidder, type, amount, token, price, currency) => {
+    //TODO: write a tx tagged appropriately
+    try 
+    {
+        console.log("bid posted to arweave. txid ")
+        return "[txid]"
+    } catch (err) {
+        return null
+    }
+}
+
+export {markAsTweeted, getNextBidFromQueue, updateBidQueue, updateBidStatus, createBid}

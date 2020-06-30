@@ -6,10 +6,49 @@ const client = new Twitter(creds)
 import {arqlWithRetry, getTxWithRetry} from './lib/arweave'
 import {and, equals} from 'arql-ops'; 
 
-import {getNextBidFromQueue, updateBidQueue, markAsTweeted} from './model/bids'
+import {getNextBidFromQueue, updateBidQueue, markAsTweeted, createBid} from './model/bids'
 import { db } from './lib/db'
 
+const listenForTweets= () => {
 
+  //TODO: use webhooks... this is not the right way to create an autoresponder
+  //but this will be fine for POC
+  var stream = client.stream('statuses/filter', {track: 'ArweaveAPI'});
+
+  console.log('listening for tweets on @'+BOT_ACCOUNT_NAME)
+  stream.on('data', (event) => {
+    console.log("got incoming tweet!")
+    if (!event.text.startsWith('@ArweaveAPI'))
+    {
+      console.log("not a bid. tweet contents: "+ event.text)
+      return
+    }
+
+    console.log("tweet text: "+event.text)
+
+    var tokenized = event.text.toLowerCase().split(' ')
+    var twitterUser = event.user.screen_name
+
+    if (tokenized.length >= 6 && (tokenized[1] == 'buy' || tokenized[1] == 'sell'))
+    {
+          console.log(tokenized[1]+" received from "+twitterUser)
+          createBid(twitterUser, tokenized[1], tokenized[2], tokenized[3], tokenized[4], tokenized[5])
+          .then((txid) => {
+            if (txid != null)
+              tweetConfirmation(twitterUser, txid)
+            else {
+              console.log("parse error. bid failed")
+            }
+          })
+    } else {
+      console.log("parse error. bid failed")
+    }
+  })
+
+  stream.on('error', function(error) {
+    console.log(`Twitter API error: `+JSON.stringify(error))
+  });        
+}
 
   const syncFromArweave = async() => {
     var query = and(
@@ -36,7 +75,15 @@ import { db } from './lib/db'
     console.log(`arweave sync complete. ${bids.length} bids added to queue`)
     return bids.length
   }
-
+  const tweetConfirmation = (bidder, txid) => {
+    client.post('statuses/update', 
+      {
+        status: `New bid from @${bidder} received, posting to Arweave. Check status: https://viewblock.io/arweave/tx/${txid}`
+      }
+    ).then((tweet => {
+      console.log(JSON.stringify(tweet, null, 2))
+    }))
+  }
   const tweetNextBid = () => {
     getNextBidFromQueue().then(bid => {
       if (bid == null)
@@ -63,4 +110,7 @@ import { db } from './lib/db'
     setInterval(syncFromArweave, 15 * 60 * 1000)
     setInterval(tweetNextBid, 1 * 60 * 1000)
   })
+
+  listenForTweets()
+
   //that's all folks.
