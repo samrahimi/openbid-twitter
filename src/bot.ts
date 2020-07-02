@@ -78,7 +78,7 @@ const listenForTweets= () => {
   const tweetConfirmation = (bidder, txid) => {
     client.post('statuses/update', 
       {
-        status: `New bid from @${bidder} received, posting to Arweave. Check status: https://viewblock.io/arweave/tx/${txid}`
+        status: `New bid from @${bidder} received, posting to Arweave. Status: https://viewblock.io/arweave/tx/${txid}`
       }
     ).then((tweet => {
       console.log(JSON.stringify(tweet, null, 2))
@@ -90,7 +90,7 @@ const listenForTweets= () => {
         console.log("Nothing in queue")
       else {
         console.log("Tweeting bid txid "+bid.txid)
-        client.post('statuses/update', {status: `Offer to ${bid.bid_type} ${bid.bid_token_quantity} ${bid.token_name} for ${bid.bid_amount} ${bid.bid_currency}. ${bid.contact_url}`})
+        client.post('statuses/update', {status: `Offer to ${bid.bid_type} ${bid.bid_token_quantity} ${bid.token_name} for ${bid.bid_amount} ${bid.bid_currency}. MSG: ${bid.contact_url}`})
         .then (function (tweet) {
           console.log(tweet);
           markAsTweeted(bid.id, tweet.id_str)

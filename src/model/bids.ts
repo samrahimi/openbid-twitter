@@ -1,5 +1,5 @@
 import {db} from '../lib/db'
-import {client, arqlWithRetry, getTxWithRetry} from '../lib/arweave'
+import {client, arqlWithRetry, getTxWithRetry, writeTagsOnlyTx} from '../lib/arweave'
 
 const AppVersion = process.env.APP_VERSION || null //used in ARQL query if not null
 
@@ -26,7 +26,7 @@ const updateBidQueue = async(bids) => {
                    bid_token_id, bid_amount, bid_currency, bid_quantity, bid_token_name)
                   values
                   (
-                      '${bid.owner}', '${bid.id}', '${getContactUrlFromBidderId(bid.owner)}', 'queued', '${bid.tags.Type == '0' ? "buy":"sell"}',
+                      '${bid.tags.Source == "twitter"? bid.tags["Twitter-User"] : bid.owner}', '${bid.id}', '${bid.tags.source != "twitter" ? getContactUrlFromBidderId(bid.owner): bid.tags["Twitter-User"]}', 'queued', '${bid.tags.Type == '0' ? "buy":"sell"}',
                       '${bid.tags.Token}', '${bid.tags.Price}', '${bid.tags.Currency}', '${bid.tags.Amount}', '${bid.tags.Token.substr(0, 10)}...'
                   )`)
     }
@@ -93,9 +93,34 @@ const createBid = async(bidder, type, amount, token, price, currency) => {
     //TODO: write a tx tagged appropriately
     try 
     {
-        console.log("bid posted to arweave. txid ")
-        return "[txid]"
+        var tags = [{
+            "name": "Type",
+            "value": type == "buy" ? "0" : "1"
+        }, {
+            "name": "Token", 
+            "value": token
+        },
+        {
+            "name": "Price",
+            "value": price
+        },
+        {
+            "name": "Currency",
+            "value": currency
+        },
+        {
+            "name": "Amount",
+            "value": amount
+        },
+        {
+            "name": "Twitter-User",
+            "value": bidder
+        }]
+        console.log(JSON.stringify(tags, null, 2))
+        const txid = await writeTagsOnlyTx(tags)
+        return txid
     } catch (err) {
+        console.log(err)
         return null
     }
 }
