@@ -29,7 +29,7 @@ const writeTagsOnlyTx =async(tags: Array<any>) => {
         tx.addTag("Content-Type", "application/json")
         tx.addTag("App-Name", "OpenBid")
         tx.addTag("App-Version", "0.0.1")
-        tx.addTag("Source", "Twitter")
+        tx.addTag("Source", "twitter")
 
 
         tags.forEach(tag => {

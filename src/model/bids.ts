@@ -26,7 +26,7 @@ const updateBidQueue = async(bids) => {
                    bid_token_id, bid_amount, bid_currency, bid_quantity, bid_token_name)
                   values
                   (
-                      '${bid.tags.Source == "twitter"? bid.tags["Twitter-User"] : bid.owner}', '${bid.id}', '${bid.tags.source != "twitter" ? getContactUrlFromBidderId(bid.owner): bid.tags["Twitter-User"]}', 'queued', '${bid.tags.Type == '0' ? "buy":"sell"}',
+                      '${bid.tags.Source.toLowerCase() == "twitter"? bid.tags["Twitter-User"] : bid.owner}', '${bid.id}', '${bid.tags.Source.toLowerCase() != "twitter" ? getContactUrlFromBidderId(bid.owner): "@"+bid.tags["Twitter-User"]}', 'queued', '${bid.tags.Type == '0' ? "buy":"sell"}',
                       '${bid.tags.Token}', '${bid.tags.Price}', '${bid.tags.Currency}', '${bid.tags.Amount}', '${bid.tags.Token.substr(0, 10)}...'
                   )`)
     }
